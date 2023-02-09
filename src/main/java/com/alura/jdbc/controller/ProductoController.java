@@ -15,12 +15,34 @@ import java.sql.Statement;
 
 public class ProductoController {
 
-	public void modificar(String nombre, String descripcion, Integer id) {
-		// TODO
+	public int modificar(String nombre, String descripcion, Integer id, Integer cantidad) throws SQLException {
+		ConnectionFactory factory = new ConnectionFactory();
+		
+		Connection con = factory.recuperaConexion();
+		
+		Statement statement = con.createStatement();
+		
+		statement.execute("UPDATE PRODUCTO SET "
+			    + " NOMBRE = '" + nombre + "'"
+			    + ", DESCRIPCION = '" + descripcion + "'"
+			    + ", CANTIDAD = " + cantidad
+			    + "WHERE ID = " + id);
+		
+		int updateCount = statement.getUpdateCount();
+		
+		con.close();
+		
+		return updateCount;
 	}
 
-	public void eliminar(Integer id) {
-		// TODO
+	public int eliminar(Integer id) throws SQLException{
+		Connection con = new ConnectionFactory().recuperaConexion();
+		
+		Statement statement = con.createStatement();
+		
+		statement.execute("DELETE FROM PRODUCTO WHERE ID = " + id);
+		
+		return statement.getUpdateCount();
 	}
 
 	public List<Map<String, String>> listar() throws SQLException {
@@ -49,8 +71,23 @@ public class ProductoController {
 		return resultado;
 	}
 
-    public void guardar(Object producto) {
-		// TODO
+    public void guardar(Map<String, String> producto) throws SQLException {
+		Connection con = new ConnectionFactory().recuperaConexion();
+		
+		Statement statement = con.createStatement();
+		
+		statement.execute("INSERT INTO PRODUCTO (nombre, descripcion, cantidad)" 
+				+"VALUES( '" + producto.get("NOMBRE") + "' , '" 
+				+ producto.get("DESCRIPCION") + "' ,"
+				+ producto.get("CANTIDAD") + ")", Statement.RETURN_GENERATED_KEYS);
+		
+		ResultSet resultSet = statement.getGeneratedKeys();
+		
+		while(resultSet.next()) {
+			System.out.println(String.format("Fue insertado el producto de ID %d", resultSet.getInt(1)));
+			
+		}
+		
 	}
 
 }
