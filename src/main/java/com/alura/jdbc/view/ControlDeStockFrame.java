@@ -243,9 +243,9 @@ public class ControlDeStockFrame extends JFrame {
         							textoDescripcion.getText(), 
         							cantidadInt);
         
-        var categoria = comboCategoria.getSelectedItem();
+        var categoria = (Categoria) comboCategoria.getSelectedItem();
 
-		this.productoController.guardar(producto);
+		this.productoController.guardar(producto, categoria.getId());
 
         JOptionPane.showMessageDialog(this, "Registrado con éxito!");
 

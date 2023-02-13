@@ -22,43 +22,39 @@ public class ProductoDAO {
 	}
 	
 	public void guardar(Producto producto){
-		try(con){
-			final PreparedStatement statement = con.prepareStatement("INSERT INTO PRODUCTO "
-					+ "(nombre, descripcion, cantidad)" 
-					+"VALUES(?, ?, ?)",
+		try{
+			PreparedStatement statement;
+			statement = con.prepareStatement("INSERT INTO PRODUCTO "
+					+ "(nombre, descripcion, cantidad, categoria_id)" 
+					+"VALUES(?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
 			
 			try(statement){
-					ejecutaRegistro(producto, statement);
+				statement.setString(1, producto.getNombre());
+				statement.setString(2, producto.getDescripcion());
+				statement.setInt(3, producto.getCantidad());
+				statement.setInt(4, producto.getCategoriaId());
+				
+				statement.execute();
+				
+				final ResultSet resultSet = statement.getGeneratedKeys();
+				
+				try(resultSet) {
+					while(resultSet.next()) {
+						producto.setId(resultSet.getInt(1));
+						
+						System.out.println(String.format("Fue insertado el producto de ID %s", producto));
+					}
+				}
 			}
 		}catch(SQLException e){
-			throw new RuntimeException(e);
-		}
+		throw new RuntimeException(e);
 	}
+}
 
-	
-	private void ejecutaRegistro(Producto producto, PreparedStatement statement)
-			throws SQLException {
-		statement.setString(1, producto.getNombre());
-		statement.setString(2, producto.getDescripcion());
-		statement.setInt(3, producto.getCantidad());
-		
-		statement.execute();
-		
-		ResultSet resultSet = statement.getGeneratedKeys();
-		
-		try(resultSet) {
-			while(resultSet.next()) {
-				producto.setId(resultSet.getInt(1));
-				System.out.println(String.format
-						("Fue insertado el producto de ID %s", producto));
-				
-			}
-		}
-	}
 
 	public List<Producto> listar() {
-List<Producto> resultado = new ArrayList<>();
+		List<Producto> resultado = new ArrayList<>();
 		
 		ConnectionFactory factory = new ConnectionFactory();
 		final Connection con = factory.recuperaConexion();
@@ -129,5 +125,37 @@ List<Producto> resultado = new ArrayList<>();
 	    } catch (SQLException e) {
 	        throw new RuntimeException(e);
 	    }
+	}
+
+	public List<Producto> listar(Integer categoriaId) {
+		List<Producto> resultado = new ArrayList<>();
+
+		try{
+			final PreparedStatement statement = con.prepareStatement
+					("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD"
+					+ " FROM PRODUCTO "
+					+ " WHERE CATEGORIA_ID = ?");
+			
+			try(statement){
+				statement.setInt(1, categoriaId);
+				statement.execute();
+				
+				final ResultSet resultSet = statement.getResultSet();
+				
+				try(resultSet){
+					while(resultSet.next()) {
+						resultado.add(new Producto(
+								resultSet.getInt("id"),
+								resultSet.getString("NOMBRE"),
+								resultSet.getString("DESCRIPCION"),
+								resultSet.getInt("CANTIDAD")));
+					}
+				}
+			}
+		}catch(SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		return resultado;
 	}
 }
